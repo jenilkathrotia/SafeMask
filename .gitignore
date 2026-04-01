@@ -1,0 +1,9 @@
+.rocketride/
+.env
+__pycache__/
+.DS_Store
+rgb_anon_trainvaltest/
+gt_trainval/
+outputs/checkpoints/
+data/
+*.pth

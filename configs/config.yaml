@@ -1,0 +1,30 @@
+# SafeMask Baseline Configuration
+
+dataset:
+  # Base ACDC image paths (Training on ALL adverse conditions: fog, night, rain, snow)
+  train_image_dir: "/Users/jenilkathrotiya/Downloads/SafeMask/rgb_anon_trainvaltest/rgb_anon/*/train"
+  val_image_dir: "/Users/jenilkathrotiya/Downloads/SafeMask/rgb_anon_trainvaltest/rgb_anon/*/val"
+  
+  # ACDC ground truth labels
+  train_mask_dir: "/Users/jenilkathrotiya/Downloads/SafeMask/gt_trainval/gt/*/train"
+  val_mask_dir: "/Users/jenilkathrotiya/Downloads/SafeMask/gt_trainval/gt/*/val"
+  image_size: [256, 512] # Resize height, width
+  num_classes: 19        # Standard Cityscapes/ACDC
+
+training:
+  batch_size: 4
+  epochs: 5
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  num_workers: 4
+  save_dir: "outputs/checkpoints"
+
+model:
+  architecture: "DeepLabV3Plus"
+  encoder: "resnet18"
+  encoder_weights: "imagenet"
+
+uncertainty:
+  # The entropy threshold above which pixels are considered "unreliable"
+  # Standardized between 0 and 1 using max entropy log(num_classes)
+  entropy_threshold: 0.5

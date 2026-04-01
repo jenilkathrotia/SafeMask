@@ -1,0 +1,9 @@
+torch
+torchvision
+segmentation-models-pytorch
+streamlit
+opencv-python-headless
+matplotlib
+albumentations
+pyyaml
+tqdm
