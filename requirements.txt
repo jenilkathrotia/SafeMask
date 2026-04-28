@@ -7,3 +7,4 @@ matplotlib
 albumentations
 pyyaml
 tqdm
+pytest
