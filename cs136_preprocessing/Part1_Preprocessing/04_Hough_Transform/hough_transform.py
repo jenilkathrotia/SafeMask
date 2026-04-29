@@ -25,7 +25,7 @@ from utils.io_utils import (  # noqa: E402
     add_io_args, banner, discover_images, output_stem, read_image, save_image, to_gray,
 )
 from utils.algorithms import (  # noqa: E402
-    canny_project3, find_local_maxima_3d, hough_circles_project4, normalize_to_uint8,
+    canny_project3, find_local_maxima_3d, hough_circles_project4,
 )
 
 OUT_DIR = Path(__file__).resolve().parent / "Hough_Images"

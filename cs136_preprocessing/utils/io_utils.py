@@ -10,11 +10,10 @@ those images are downloaded.
 from __future__ import annotations
 
 import argparse
-import os
 import random
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import List, Tuple
 
 import cv2
 import numpy as np
