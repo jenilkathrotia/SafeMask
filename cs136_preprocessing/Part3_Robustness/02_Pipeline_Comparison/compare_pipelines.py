@@ -1,20 +1,23 @@
-"""Part 3 (Step 2) — Compare Sobel/Canny/Segmentation: clean vs. distorted.
+"""Part 3, Step 2: Compare Sobel, Canny, and segmentation on clean vs. distorted images.
 
-For every source image plus its three distorted variants we run:
-  * Sobel @ P75 binarization
-  * Project 3 Canny
-  * Project 3 Canny *with* a sigma=1 Gaussian pre-blur (does pre-smoothing
-    rescue noisy frames? cv08 says yes — we measure it.)
+For every source image plus its three distorted copies we run:
+  * Sobel at P75
+  * Project 3 Canny (no pre-blur)
+  * Project 3 Canny with a sigma=1 Gaussian pre-blur. cv08 says
+    pre-blur should help with noise. This script measures whether it
+    actually does.
   * Texture segmentation (Gabor + K-Means k=4)
 
-Per-image we measure IoU(distorted_output, clean_output) for the binary
-edge methods, and ARI(distorted_labels, clean_labels) for the segmentation
-(adjusted Rand index — invariant to label permutation).
+Scoring per image:
+  * IoU(distorted_output, clean_output) for the binary edge methods
+  * ARI(distorted_labels, clean_labels) for the segmentation. ARI
+    (Adjusted Rand Index) ignores label swaps, which is the right
+    metric for clustering since cluster IDs are arbitrary.
 
 Outputs:
   * Results/per_image_metrics.csv
-  * Results/aggregate_metrics.csv  (mean IoU/ARI per detector × distortion)
-  * Results/iou_heatmap.png        (detector × distortion heatmap)
+  * Results/aggregate_metrics.csv (mean IoU/ARI per detector x distortion)
+  * Results/iou_heatmap.png (detector x distortion heatmap)
 """
 
 from __future__ import annotations

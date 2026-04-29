@@ -1,12 +1,14 @@
-"""Part 1.2 — Sobel edge detector (Project 3 port).
+"""Part 1.2: Sobel edge detector (Project 3 port).
 
-Applies the same 3×3 Sx / Sy kernels as Project 3's ``sobel()`` and saves:
-  * |gx|, |gy| (component magnitudes),
-  * gradient magnitude (linear stretch to 0–255),
-  * a thresholded binary edge map at the 75th-percentile of the magnitude
-    (a stable, image-adaptive default).
-A sigma=1 Gaussian pre-blur is offered via ``--pre-blur`` since CS 136 cv07
-emphasizes pre-smoothing before any first-derivative operator.
+Uses the same 3x3 Sx / Sy kernels as Project 3's ``sobel()`` and saves:
+  * |gx|, |gy| (sizes of the horizontal and vertical gradients),
+  * gradient magnitude (rescaled to 0..255),
+  * a binary edge map at the top 25% of the magnitude (this is a
+    threshold that adapts to each image, so it works on dark and
+    bright images alike).
+
+A sigma=1 Gaussian pre-blur is on by default (``--pre-blur``). Lecture
+cv07 says you should always blur before a first-derivative operator.
 """
 
 from __future__ import annotations

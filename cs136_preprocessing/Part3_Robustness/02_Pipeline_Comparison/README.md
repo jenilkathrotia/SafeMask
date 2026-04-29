@@ -1,4 +1,4 @@
-# Part 3 / Step 2 — Compare Clean vs. Distorted
+# Part 3, Step 2: Compare Clean vs. Distorted
 
 This script runs four methods (Sobel, Canny, Canny with pre-blur,
 texture segmentation) on every image and on every distorted copy of
@@ -13,7 +13,7 @@ write-up.
 | `per_image_metrics.csv`               | one row per (image, distortion, method) with the score            |
 | `aggregate_metrics.csv`               | average and standard deviation per method per distortion          |
 | `iou_heatmap.png`                     | 4x3 heatmap (methods on the rows, distortions on the columns)     |
-| `diagnostic_strips/*.png`             | clean Canny / distorted Canny / pre-blurred Canny side by side    |
+| `diagnostic_strips/*.png`             | clean Canny, distorted Canny, and pre-blurred Canny side by side  |
 
 ## How to run
 

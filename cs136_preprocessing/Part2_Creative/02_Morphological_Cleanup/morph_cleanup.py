@@ -1,14 +1,14 @@
-"""Part 2 (Creative #2) — Morphological cleanup of edge maps.
+"""Part 2, Creative Idea 2: Morphological cleanup of Canny edges.
 
-Project 3 already covered binary expand/shrink. We extend that to a
-classic edge-cleanup pipeline:
-  * **Closing** (dilate→erode) bridges 1–2-pixel gaps in continuous edges.
-  * **Opening** (erode→dilate) removes isolated 1-pixel speckle.
-  * **Skeletonize** (Zhang-Suen via scikit-image) thins the result back to
-    1-pixel-wide lines for cleaner Hough input.
+Project 3 already covered binary expand and shrink. We extend that to
+the standard edge-cleanup steps:
+  * Closing (dilate then erode) fills 1 to 2 pixel gaps in real edges.
+  * Opening (erode then dilate) removes single noisy pixels.
+  * Skeletonize (Zhang-Suen, from scikit-image) thins the result back
+    to 1-pixel-wide lines, which makes Hough voting cleaner.
 
-We save the Canny baseline and each stage so the grader can see exactly
-what each morphological step contributes.
+We save the Canny baseline and each stage so the grader can see what
+each step contributes.
 """
 
 from __future__ import annotations

@@ -1,13 +1,13 @@
-"""Part 2 (Creative #3) — Mean-Shift color segmentation in CIE Lab.
+"""Part 2, Creative Idea 3: Mean-Shift color segmentation in CIE Lab.
 
-A different, complementary segmentation algorithm from Part 1.6's
-Gabor+KMeans approach. Mean-Shift is **nonparametric** — it does not need
-a preset cluster count, which is more honest given that fog/night/rain
-frames have wildly different intrinsic scene complexity.
+This is a different segmentation method from Part 1.6, which used
+Gabor + K-Means. Mean-Shift does not need a preset number of clusters,
+so it works better on ACDC because each weather has a different number
+of natural color regions.
 
-We use OpenCV's `pyrMeanShiftFiltering` (the spatial-range mean-shift
-that operates directly in colour space), then quantize the smoothed
-output and write a colour-coded label map for visual inspection.
+We use OpenCV's ``pyrMeanShiftFiltering``, which moves each pixel
+toward the nearest local color mode. Then we quantize the result with
+K-Means just so the regions show up clearly when you look at the output.
 """
 
 from __future__ import annotations

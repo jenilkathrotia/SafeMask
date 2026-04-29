@@ -1,4 +1,4 @@
-# Part 2 / Creative #2 — Morphological Cleanup
+# Part 2, Creative Idea 2: Morphological Cleanup
 
 Project 3 already had expand and shrink. We extend that to the standard
 edge-cleanup steps.

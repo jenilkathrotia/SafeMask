@@ -1,4 +1,4 @@
-# Part 1.2 — Sobel Edge Detector
+# Part 1.2: Sobel Edge Detector
 
 This is the same Sobel from Project 3, just rewritten in Python.
 

@@ -1,4 +1,4 @@
-# Part 1.6 — Texture Segmentation
+# Part 1.6: Texture Segmentation
 
 We split each image into regions based on local texture.
 
@@ -36,4 +36,4 @@ the segmentation on the right.
   but different in color, like grass vs. dirt or lane markings vs.
   asphalt.
 - Fog and snow images have less to work with. The clusters tend to
-  collapse into fewer real groups, which we mention more in Part 3.
+  collapse into fewer real groups, which we talk about more in Part 3.

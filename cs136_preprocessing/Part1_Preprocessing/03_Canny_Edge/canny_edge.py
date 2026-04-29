@@ -1,13 +1,13 @@
-"""Part 1.3 — Canny edge detector (Project 3 port + OpenCV reference).
+"""Part 1.3: Canny edge detector (Project 3 port plus OpenCV reference).
 
-For each input we run two implementations side-by-side:
-  * ``project3``  — exact port of Project 3's canny() (5×5/273 Gaussian, 2×2
-    P/Q gradient, sector NMS, connected hysteresis).
-  * ``cv2.Canny`` — at three (low, high) preset pairs to illustrate parameter
-    sensitivity.
+For each input image we run two versions side by side:
+  * ``project3``: our Python version of Project 3's canny() (5x5/273
+    Gaussian, 2x2 P/Q gradient, 4-sector non-maxima suppression, then
+    connected hysteresis).
+  * ``cv2.Canny`` at three (low, high) threshold pairs, so we can show
+    how much the thresholds change the output.
 
-This makes Part 1.5 (edge-detector evaluation) easy: it just consumes these
-binary maps.
+Part 1.5 reads the binary maps from this folder.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ CV2_PRESETS = (
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Canny edge detection — Project 3 port + cv2 reference.")
+    parser = argparse.ArgumentParser(description="Canny edge detection: Project 3 port plus cv2 reference.")
     add_io_args(parser)
     parser.add_argument("--theta-low-frac", type=float, default=0.05,
                         help="theta_low = frac * max(E) for the Project 3 port.")

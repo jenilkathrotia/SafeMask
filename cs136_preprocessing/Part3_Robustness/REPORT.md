@@ -1,4 +1,4 @@
-# Part 3 — Robustness Analysis
+# Part 3: Robustness
 
 Real driving cameras pick up noise, motion blur, and bad contrast. This
 part checks how badly each preprocessing method breaks when those things
@@ -55,7 +55,7 @@ better. cv08 said pre-blur would help with noise, and it really does.
 The numbers barely change (0.22 vs 0.23). That is fine, because
 motion blur is already a kind of blur, and adding more blur cannot
 bring back details that the motion blur removed. So pre-blur is a
-fix for noise specifically, not a magic fix for everything.
+fix for noise specifically, not a fix for everything.
 
 **3. Low contrast is the easiest distortion.**
 Canny still gets IoU 0.91. The reason is that its hysteresis
@@ -68,10 +68,9 @@ because using a percentile threshold is contrast-invariant.
 Sobel-p75 gets 0.30 vs Canny's 0.16, which sounds like Sobel is more
 robust. But Sobel-p75 already marks 28% of the image as edges. With
 that many edges, noise barely changes the result. Sobel looks robust
-only because its output was already very loose. The pre-blurred
-Canny matches Sobel's robustness (0.32 vs 0.30) and still keeps a
-clean 3 to 5% edge density. So pre-blurred Canny is the actual
-winner here.
+only because its output was already very loose. The pre-blurred Canny
+matches Sobel's robustness (0.32 vs 0.30) and still keeps a clean 3
+to 5% edge density. So pre-blurred Canny is the actual winner here.
 
 **5. Texture segmentation handles all three distortions well.**
 ARI stays at 0.72 or higher in every case. The Gabor responses get
@@ -90,9 +89,9 @@ For SafeMask preprocessing in fog, night, rain, and snow:
 3. Motion blur is the hardest distortion. If a pipeline depends on
    working under motion blur, use segmentation, not edges.
 4. Run CLAHE first when the main problem is low contrast (we cover
-   that in Part 2 Creative #1).
+   that in Part 2, Creative Idea 1).
 
 The diagnostic strips in
-`02_Pipeline_Comparison/Results/diagnostic_strips/` show
-clean Canny | distorted Canny | distorted Canny with pre-blur side by
-side. You can see finding #1 with your own eyes there.
+`02_Pipeline_Comparison/Results/diagnostic_strips/` show clean Canny,
+distorted Canny, and distorted Canny with pre-blur side by side. You
+can see point 1 above with your own eyes there.

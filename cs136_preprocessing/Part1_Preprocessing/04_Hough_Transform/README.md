@@ -1,15 +1,15 @@
-# Part 1.4 — Hough Transform
+# Part 1.4: Hough Transform
 
 Lines and circles, both shown as overlays on the original image.
 
 ## What we save per image
 
-| Suffix                              | What it shows                                                |
-| ----------------------------------- | ------------------------------------------------------------ |
-| `__00_edges.png`                    | Project 3 Canny output (the input to Hough)                  |
-| `__01_lines_overlay.png`            | `cv2.HoughLinesP` lines drawn in green (good for lanes)      |
-| `__02_circles_cv2.png`              | `cv2.HoughCircles` circles drawn in red                      |
-| `__03_circles_project4_port.png`    | Our Python version of the Project 4 circle Hough             |
+| Suffix                              | What it shows                                                 |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `__00_edges.png`                    | Project 3 Canny output (the input to Hough)                   |
+| `__01_lines_overlay.png`            | `cv2.HoughLinesP` lines drawn in green (good for lanes)       |
+| `__02_circles_cv2.png`              | `cv2.HoughCircles` circles drawn in red                       |
+| `__03_circles_project4_port.png`    | Our Python version of the Project 4 circle Hough              |
 
 The Project 4 port is the same algorithm we wrote in C: build a sin/cos
 lookup table, have each edge pixel vote for circles it could belong to,

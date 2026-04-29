@@ -1,4 +1,4 @@
-# Part 1.3 — Canny Edge Detector
+# Part 1.3: Canny Edge Detector
 
 Two versions of Canny per image, side by side.
 
@@ -16,6 +16,6 @@ Two versions of Canny per image, side by side.
 
 2. **`__cv2_low_50_150.png`**, **`__cv2_mid_75_200.png`**,
    **`__cv2_high_100_250.png`**, OpenCV's Canny at three threshold
-   pairs. Useful for showing how much the threshold matters.
+   pairs. This shows how much the thresholds change the output.
 
-The binary maps from this folder feed into Part 1.5 evaluation.
+The binary maps from this folder feed into Part 1.5.

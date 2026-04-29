@@ -1,12 +1,12 @@
-# SafeMask Term Project — CS 136 Preprocessing
+# SafeMask Term Project: CS 136 Preprocessing
 
 This folder is our CS 136 term project. We rewrote the C code from
 Project 3 (smoothing, Sobel, Canny) and Project 4 (Hough circles) in
-Python. The kernels and steps are the same, so the answers should match.
+Python. The kernels and steps are the same, so the answers match.
 
-We use the SafeMask training images as our input. SafeMask is the
+We use the SafeMask training images as input. SafeMask is the
 self-driving project our team is building, and the training images come
-from the ACDC dataset (fog, night, rain, snow). We are not using the
+from the ACDC dataset (fog, night, rain, snow). We did not use the
 Marine, Geology, or Anthropology samples from Canvas.
 
 ## Folders
@@ -72,11 +72,11 @@ About 20 minutes. Makes around 2 GB of output across all 11 steps.
 
 | Assignment item                                | Folder                                              |
 | ---------------------------------------------- | --------------------------------------------------- |
-| Part 1 Gaussian filter                         | `Part1_Preprocessing/01_Gaussian_Filter`            |
-| Part 1 Sobel                                   | `Part1_Preprocessing/02_Sobel_Edge`                 |
-| Part 1 Canny                                   | `Part1_Preprocessing/03_Canny_Edge`                 |
-| Part 1 Hough transform                         | `Part1_Preprocessing/04_Hough_Transform`            |
-| Part 1 edge detector comparison                | `Part1_Preprocessing/05_Edge_Detector_Evaluation`   |
-| Part 1 texture segmentation                    | `Part1_Preprocessing/06_Texture_Segmentation`       |
-| Part 2 creative ideas                          | `Part2_Creative/01_*` through `03_*`                |
-| Part 3 robustness                              | `Part3_Robustness/`                                 |
+| Part 1, Gaussian filter                        | `Part1_Preprocessing/01_Gaussian_Filter`            |
+| Part 1, Sobel                                  | `Part1_Preprocessing/02_Sobel_Edge`                 |
+| Part 1, Canny                                  | `Part1_Preprocessing/03_Canny_Edge`                 |
+| Part 1, Hough transform                        | `Part1_Preprocessing/04_Hough_Transform`            |
+| Part 1, edge detector comparison               | `Part1_Preprocessing/05_Edge_Detector_Evaluation`   |
+| Part 1, texture segmentation                   | `Part1_Preprocessing/06_Texture_Segmentation`       |
+| Part 2, creative ideas                         | `Part2_Creative/01_*` through `03_*`                |
+| Part 3, robustness                             | `Part3_Robustness/`                                 |

@@ -1,4 +1,4 @@
-# Part 1.1 — Gaussian Filter
+# Part 1.1: Gaussian Filter
 
 This folder runs Gaussian smoothing on each input image at a few
 different sigma values.

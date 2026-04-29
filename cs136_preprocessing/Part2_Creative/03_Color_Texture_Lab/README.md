@@ -1,4 +1,4 @@
-# Part 2 / Creative #3 — Mean-Shift in Lab Color Space
+# Part 2, Creative Idea 3: Mean-Shift in Lab Color Space
 
 This is a different way to do segmentation than Part 1.6. Part 1.6 used
 Gabor + K-Means, which needs you to pick the number of clusters up
@@ -15,8 +15,8 @@ naturally exist in color space.
 4. Run K-Means with k=8 just for visualization, so the regions show
    up in clearly different colors.
 
-Each output PNG is three images side by side: original | mean-shift
-filtered | quantized to 8 colors.
+Each output PNG is three images side by side: original, mean-shift
+filtered, then quantized to 8 colors.
 
 ## Flags
 

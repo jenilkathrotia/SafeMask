@@ -1,9 +1,9 @@
-"""Part 1.1 — Gaussian filter.
+"""Part 1.1: Gaussian filter.
 
 For every input image we save:
   * the grayscale source,
   * Gaussian-smoothed outputs at sigma = 1, 2, 4 (kernel size = 6*sigma+1),
-  * the Project 3 fixed 5x5/273 kernel for direct comparison.
+  * the Project 3 fixed 5x5/273 kernel, so we can compare the two side by side.
 
 Run from the repo root:
     python cs136_preprocessing/Part1_Preprocessing/01_Gaussian_Filter/gaussian_filter.py

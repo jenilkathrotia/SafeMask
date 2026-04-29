@@ -1,15 +1,18 @@
-"""Part 2 (Creative #1) — CLAHE + Bilateral + Canny pipeline.
+"""Part 2, Creative Idea 1: CLAHE plus bilateral filter plus Canny.
 
-Motivation: ACDC frames in fog/night have very compressed luminance
-histograms. Plain Canny under-detects faint edges. We combine:
-  1. **CLAHE** (contrast-limited adaptive histogram equalization) on the
-     L-channel of CIE Lab — boosts local contrast without blowing highlights.
-  2. **Bilateral filter** — denoises while preserving edges (ordinary
-     Gaussian blur would erase the contrast we just added).
-  3. **Canny** — same Project 3 thresholds, now operating on a much
-     more discriminative input.
+Why we do this: ACDC fog and night frames have a very narrow range of
+brightness. Plain Canny misses faint edges in those frames. So we
+chain three steps:
+  1. CLAHE (a smarter histogram equalization) on the L channel of
+     Lab. This boosts local contrast without blowing out the bright
+     spots.
+  2. Bilateral filter, which denoises without blurring edges. We need
+     this because CLAHE also makes noise stronger, and a normal
+     Gaussian would erase the contrast we just added.
+  3. Canny with the same Project 3 thresholds, now running on a much
+     cleaner input.
 
-We save the intermediate stages so the contribution of each step is visible.
+We save every step so you can see what each one contributes.
 """
 
 from __future__ import annotations

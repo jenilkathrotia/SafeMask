@@ -1,11 +1,12 @@
-"""Part 1.4 — Hough transform.
+"""Part 1.4: Hough transform.
 
-Two passes per image, both visualized as overlays on the source:
-  * **Lines** — `cv2.HoughLinesP` on the Project 3 Canny output. Useful for
-    lane markings in driving scenes.
-  * **Circles** — *both* `cv2.HoughCircles` and the Project 4 NumPy port of
-    ``houghTransformCircles`` + 3D local-maxima extraction. The Project 4 port
-    runs on a downsampled image so vote casting stays tractable.
+We run two passes per image and draw both as overlays on the source:
+  * Lines: ``cv2.HoughLinesP`` on the Project 3 Canny output. Good for
+    finding lane markings.
+  * Circles: both ``cv2.HoughCircles`` and our Python port of Project 4's
+    ``houghTransformCircles`` plus the 3D local-maxima search. The
+    Project 4 port runs on a shrunk version of the edge map, otherwise
+    voting takes too long in Python.
 
 Outputs go to ``Hough_Images/`` next to this script.
 """

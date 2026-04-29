@@ -1,10 +1,11 @@
-"""NumPy ports of the C algorithms from CS 136 Project 3 / Project 4.
+"""Python versions of the C algorithms from CS 136 Project 3 and Project 4.
 
-Kernels and pipeline stages match the reference C implementations under
-``CS 136/Project3/netpbm/main.c`` and ``CS 136/Project4/netpbm_hough.c`` so
-results are directly comparable. OpenCV is used only for convolution and the
-final image I/O — all decision logic (thresholds, NMS, hysteresis, Hough
-voting) is hand-rolled to mirror the lecture pseudocode (cv07/cv08).
+Kernels and pipeline steps match the C code in
+``CS 136/Project3/netpbm/main.c`` and ``CS 136/Project4/netpbm_hough.c``,
+so the results match too. We use OpenCV only for convolutions and image
+I/O. The actual decisions (thresholds, non-maxima suppression,
+hysteresis, Hough voting) are written by hand to follow the lecture
+pseudocode in cv07 and cv08.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ def sobel_components(gray: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
 
 
 def normalize_to_uint8(arr: np.ndarray) -> np.ndarray:
-    """Linear stretch to 0–255 like Project 3's matrix2Image(scale=1)."""
+    """Linear stretch to 0..255, the same as Project 3's matrix2Image(scale=1)."""
     a = arr.astype(np.float64)
     lo, hi = float(a.min()), float(a.max())
     if hi - lo < 1e-12:
@@ -68,7 +69,7 @@ def canny_project3(
 
     Stages:
       1. 5x5 Gaussian smoothing (kernel/273).
-      2. 2x2 P/Q gradient → magnitude m, orientation alpha.
+      2. 2x2 P/Q gradient, then magnitude m and orientation alpha.
       3. Sector assignment (zeta ∈ {0,1,2,3}).
       4. Non-maxima suppression along the sector direction.
       5. Hysteresis with theta_low = theta_low_frac * m.max() and

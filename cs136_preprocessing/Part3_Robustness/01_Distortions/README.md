@@ -1,4 +1,4 @@
-# Part 3 / Step 1 — Make Distorted Copies
+# Part 3, Step 1: Make Distorted Copies
 
 This script makes three corrupted copies of every input image. The next
 step (`02_Pipeline_Comparison`) runs the algorithms on these to see how

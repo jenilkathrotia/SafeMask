@@ -1,19 +1,21 @@
-"""Part 1.6 — Texture-based image segmentation.
+"""Part 1.6: Texture segmentation.
 
-Pipeline (cv-style texture features → unsupervised clustering):
-  1. Build a Gabor filter bank (4 orientations × 3 scales = 12 filters).
-  2. For each pixel, compute the absolute response across all 12 filters,
-     then smooth each response with a Gaussian (turns local energy into a
-     stable per-pixel descriptor).
-  3. Optionally append (a, b) from CIE Lab as colour features.
-  4. Standardize and run K-Means with k=4 (default).
-  5. Render the cluster map as a colour-coded segmentation.
+Steps (texture features, then clustering):
+  1. Build a Gabor filter bank: 4 orientations x 3 scales = 12 filters.
+  2. For each pixel, take the absolute response of all 12 filters, then
+     smooth each response with a small Gaussian. This gives every pixel
+     a stable feature vector that describes the local texture.
+  3. (Color version only) Add the (a, b) channels from CIE Lab as
+     extra color features.
+  4. Z-score the features and run K-Means with k=4 by default.
+  5. Color in the result by which cluster each pixel belongs to.
 
-Two outputs are produced per image:
+Two outputs per image:
   * grayscale-only segmentation in ``Grayscale_Texture_Images/``
-  * colour-augmented segmentation in ``Color_Texture_Images/``
-matching the assignment hint to "use grayscale option first; then use more
-color when you apply the code on the images".
+  * color-augmented segmentation in ``Color_Texture_Images/``
+
+The assignment says to try grayscale first and then add color, so we
+do both.
 """
 
 from __future__ import annotations

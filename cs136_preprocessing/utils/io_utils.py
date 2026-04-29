@@ -1,10 +1,11 @@
 """Shared I/O helpers for the cs136_preprocessing pipeline.
 
-Centralizes input discovery so every algorithm script accepts the same
-``--input-dir``, ``--limit``, and ``--per-condition`` options. Defaults to the
-``My_Test/`` driving samples shipped in the SafeMask repo, but is wired so it
-can also walk an ACDC-style ``rgb_anon/{fog,night,rain,snow}/train`` tree once
-those images are downloaded.
+This file is what makes every algorithm script accept the same flags:
+``--input-dir``, ``--limit``, ``--per-condition``, ``--split``, and
+``--include-refs``. By default it reads the ``My_Test/`` images shipped
+with the SafeMask repo. Once you point ``--input-dir`` at an ACDC-style
+``rgb_anon/{fog,night,rain,snow}/train`` tree, the same code walks it
+just fine.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-# ACDC adverse-condition tags — detected from path components.
+# ACDC weather tags. We pick these out of the file path.
 ACDC_CONDITIONS = ("fog", "night", "rain", "snow")
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp")
 
@@ -58,7 +59,7 @@ def add_io_args(parser: argparse.ArgumentParser) -> None:
         "--include-refs",
         action="store_true",
         help="Include ACDC clear-weather references (*_rgb_ref_anon.png). "
-             "Off by default — adverse frames only.",
+             "Off by default. Adverse-weather frames only.",
     )
     parser.add_argument(
         "--seed",
@@ -149,7 +150,7 @@ def read_image(path: Path) -> np.ndarray:
 
 
 def to_gray(bgr: np.ndarray) -> np.ndarray:
-    """Convert BGR uint8 → single-channel uint8."""
+    """Convert BGR uint8 to single-channel uint8."""
     if bgr.ndim == 2:
         return bgr
     return cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)

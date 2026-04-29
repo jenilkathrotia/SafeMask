@@ -1,4 +1,4 @@
-# Part 2 / Creative #1 — CLAHE + Bilateral + Canny
+# Part 2, Creative Idea 1: CLAHE + Bilateral + Canny
 
 ## The idea
 
@@ -27,7 +27,7 @@ We save every step so you can see what each one does:
 | `__04_canny_baseline.png`       | Canny on the raw image            |
 | `__05_canny_pipeline.png`       | Canny on the CLAHE+bilateral image|
 
-The headline comparison is `__04_canny_baseline.png` vs.
+The main comparison is `__04_canny_baseline.png` vs.
 `__05_canny_pipeline.png`.
 
 ## Flags you can change

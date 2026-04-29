@@ -1,16 +1,16 @@
-"""Part 3 (Step 1) — Apply real-world distortions.
+"""Part 3, Step 1: Make distorted copies.
 
-Generates three corrupted copies per input image:
-  * **Gaussian noise** (σ controllable)
-  * **Motion blur** (kernel-length controllable)
-  * **Low contrast** (linear contrast/brightness rescale)
+Generates three corrupted copies of every input image:
+  * Gaussian noise (sigma is configurable)
+  * Motion blur (kernel length is configurable)
+  * Low contrast (linear contrast and brightness rescale)
 
-Outputs land in three sibling folders under ``01_Distortions/``:
-  * ``Noisy/``      — additive Gaussian noise (default σ = 25)
-  * ``Blurred/``    — horizontal motion blur (default length 15)
-  * ``LowContrast/``— α=0.4, β=40 (compressed dynamic range)
+Outputs go into three folders under ``01_Distortions/``:
+  * ``Noisy/``: Gaussian noise (default sigma = 25)
+  * ``Blurred/``: horizontal motion blur (default kernel length = 15)
+  * ``LowContrast/``: alpha=0.4, beta=40 (range squashed)
 
-These three folders become the inputs to ``02_Pipeline_Comparison``.
+These folders are the inputs to ``02_Pipeline_Comparison``.
 """
 
 from __future__ import annotations

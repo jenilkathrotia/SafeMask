@@ -1,25 +1,25 @@
-"""Part 1.5 — Quantitative edge-detector comparison (cv08).
+"""Part 1.5: Compare edge detectors with numbers (cv08).
 
 For each input image we run four detectors:
-  * Sobel @ 75th-percentile binarization
-  * Sobel @ 90th-percentile binarization
-  * Project 3 Canny (NumPy port)
-  * cv2.Canny @ (75, 200)
+  * Sobel with the top 25% of gradients as edges (P75)
+  * Sobel with the top 10% (P90)
+  * Project 3 Canny (our Python port)
+  * cv2.Canny at (75, 200)
 
-Metrics per detector (per image):
-  * edge_density       — fraction of pixels labelled as edge
-  * runtime_ms         — wall-clock time
-  * iou_vs_proj3_canny — IoU treating Project 3 Canny as the pseudo-reference
-                         (since cv08 emphasizes Canny as the lecture-canonical
-                         output, this is a fair stand-in when no hand-labelled
-                         ground truth is available)
+Numbers we record per detector per image:
+  * edge_density: percent of pixels marked as edges
+  * runtime_ms: how long the detector took
+  * iou_vs_proj3_canny: how much the output overlaps with our
+    Project 3 Canny. We use Project 3 Canny as the reference because
+    cv08 treats Canny as the standard, and we do not have hand-drawn
+    ground truth for ACDC images.
 
 Outputs:
   * Evaluation_Results/per_image_metrics.csv
-  * Evaluation_Results/aggregate_metrics.csv (mean ± std per detector)
+  * Evaluation_Results/aggregate_metrics.csv (mean and std per detector)
   * Evaluation_Results/edge_density_by_detector.png
   * Evaluation_Results/iou_by_detector.png
-  * REPORT.md is hand-authored; this script just supplies the numbers.
+  * REPORT.md is the write-up. This script only generates the numbers.
 """
 
 from __future__ import annotations
