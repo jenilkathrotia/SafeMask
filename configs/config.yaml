@@ -41,3 +41,22 @@ model:
 uncertainty:
   entropy_threshold: 0.5
   mc_dropout_passes: 10
+
+# CS 136 preprocessing: applies our term-project findings to every
+# training image. See cs136_preprocessing/Part3_Robustness/REPORT.md
+# for why each setting is on by default.
+cs136_preprocessing:
+  enabled: true
+  gaussian:
+    enabled: true
+    sigma: 1.0          # doubles Canny noise robustness (Part 3)
+  clahe:
+    enabled: true
+    conditions: [fog, night]   # only applied to these splits
+    clip_limit: 3.0
+    tile_grid: 8
+  canny_channel:
+    enabled: true        # adds Canny edges as a 4th input channel
+    theta_low_frac: 0.05
+    theta_high_mult: 2.5
+    morph_cleanup: true  # closing+opening on the edge map

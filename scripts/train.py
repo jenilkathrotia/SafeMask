@@ -101,15 +101,18 @@ def main():
     img_size = config['dataset']['image_size']
     train_transform, val_transform = build_transforms(img_size, augment=not args.dummy)
 
+    cs136_config = config.get('cs136_preprocessing', {})
     train_dataset = SegmentationDataset(
         config['dataset']['train_image_dir'],
         config['dataset']['train_mask_dir'],
-        transform=train_transform
+        transform=train_transform,
+        cs136_config=cs136_config,
     )
     val_dataset = SegmentationDataset(
         config['dataset']['val_image_dir'],
         config['dataset']['val_mask_dir'],
-        transform=val_transform
+        transform=val_transform,
+        cs136_config=cs136_config,
     )
 
     if len(train_dataset) == 0:

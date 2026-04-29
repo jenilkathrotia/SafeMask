@@ -5,23 +5,35 @@ from torch.utils.data import Dataset
 import cv2
 import numpy as np
 
+from src.preprocessing.cs136_preproc import (
+    apply_cs136_preprocessing, detect_acdc_condition,
+)
+
+
 class SegmentationDataset(Dataset):
     """
     Generic segmentation dataset loader suitable for ACDC, Cityscapes, or dummy data.
     Assumes standard directory structure where images and masks can be matched
     by sorting or by replacing a substring in the filename.
+
+    If ``cs136_config`` is provided (a dict from configs/config.yaml under
+    ``cs136_preprocessing``), each image gets the CS 136 preprocessing
+    applied right after loading and before albumentations: sigma=1 Gaussian,
+    CLAHE on Lab-L for fog/night images, plus Canny edges as a 4th channel
+    when ``canny_channel.enabled`` is true.
     """
-    def __init__(self, image_dir, mask_dir=None, transform=None):
+    def __init__(self, image_dir, mask_dir=None, transform=None, cs136_config=None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.transform = transform
-        
+        self.cs136_config = cs136_config or {}
+
         # Glob all images (support nested directories)
         self.images = sorted(glob.glob(os.path.join(image_dir, '**/*.[pj][pn][g]'), recursive=True))
         if not self.images:
             # Fallback for flat dirs
             self.images = sorted(glob.glob(os.path.join(image_dir, '*.[pj][pn][g]')))
-            
+
         self.masks = []
         if self.mask_dir is not None:
             # specifically search for ACDC/Cityscapes ground truth mask types to avoid colors/instance files
@@ -32,7 +44,7 @@ class SegmentationDataset(Dataset):
                 self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*.[pj][pn][g]'), recursive=True))
             if not self.masks:
                 self.masks = sorted(glob.glob(os.path.join(mask_dir, '*.[pj][pn][g]')))
-            
+
             # Simple assumption: masks and images are perfectly aligned by sorting
             assert len(self.images) == len(self.masks), f"Found {len(self.images)} images but {len(self.masks)} masks in {image_dir} and {mask_dir}!"
 
@@ -45,7 +57,13 @@ class SegmentationDataset(Dataset):
         if image is None:
             raise ValueError(f"Could not read image: {img_path}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
+
+        # Apply CS 136 preprocessing (Gaussian, CLAHE, Canny edge channel).
+        # No-op when cs136_config is empty or disabled.
+        if self.cs136_config.get("enabled", False):
+            condition = detect_acdc_condition(img_path)
+            image = apply_cs136_preprocessing(image, condition, self.cs136_config)
+
         mask = None
         if self.mask_dir is not None:
             mask_path = self.masks[idx]
