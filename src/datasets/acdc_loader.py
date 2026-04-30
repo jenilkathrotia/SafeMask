@@ -76,12 +76,6 @@ class SegmentationDataset(Dataset):
             raise ValueError(f"Could not read image: {img_path}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Apply CS 136 preprocessing (Gaussian, CLAHE, Canny edge channel).
-        # No-op when cs136_config is empty or disabled.
-        if self.cs136_config.get("enabled", False):
-            condition = detect_acdc_condition(img_path)
-            image = apply_cs136_preprocessing(image, condition, self.cs136_config)
-
         mask = None
         if self.mask_dir is not None:
             mask_path = self.masks[idx]
@@ -90,6 +84,9 @@ class SegmentationDataset(Dataset):
             if mask is None:
                 raise ValueError(f"Could not read mask: {mask_path}")
 
+        # Run albumentations FIRST (it expects 3-channel RGB; runs RandomFog,
+        # MotionBlur, etc.). Then apply CS 136 preprocessing on the augmented
+        # image so the Canny edge channel reflects what the model will see.
         if self.transform is not None:
             if mask is not None:
                 augmented = self.transform(image=image, mask=mask)
@@ -99,16 +96,19 @@ class SegmentationDataset(Dataset):
                 augmented = self.transform(image=image)
                 image = augmented['image']
 
-            if not torch.is_tensor(image):
-                image = torch.from_numpy(image.transpose(2, 0, 1)).float() / 255.0
-            if mask is not None and not torch.is_tensor(mask):
-                mask = torch.from_numpy(mask).long()
+        # CS 136 preprocessing: Gaussian + CLAHE + Canny channel + morph cleanup.
+        # No-op when cs136_config is empty or disabled.
+        if self.cs136_config.get("enabled", False):
+            condition = detect_acdc_condition(img_path)
+            if torch.is_tensor(image):
+                image = (image.numpy().transpose(1, 2, 0) * 255.0).astype('uint8')
+            image = apply_cs136_preprocessing(image, condition, self.cs136_config)
 
-        else:
-            # Fallback if no transform is provided: normalize to 0-1 and shape CHW
+        # Convert to CHW tensor (handles 3 or 4 channels).
+        if not torch.is_tensor(image):
             image = torch.from_numpy(image.transpose(2, 0, 1)).float() / 255.0
-            if mask is not None:
-                mask = torch.from_numpy(mask).long()
+        if mask is not None and not torch.is_tensor(mask):
+            mask = torch.from_numpy(mask).long()
 
         if mask is not None:
             return image, mask
