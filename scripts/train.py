@@ -106,12 +106,14 @@ def main():
         config['dataset']['train_mask_dir'],
         transform=train_transform,
         cs136_config=cs136_config,
+        split='train',
     )
     val_dataset = SegmentationDataset(
         config['dataset']['val_image_dir'],
         config['dataset']['val_mask_dir'],
         transform=val_transform,
         cs136_config=cs136_config,
+        split='val',
     )
 
     if len(train_dataset) == 0:

@@ -6,11 +6,11 @@
 # -----------------------------------------------------------------------
 
 dataset:
-  train_image_dir: "data/train/images"
-  val_image_dir: "data/val/images"
-
-  train_mask_dir: "data/train/masks"
-  val_mask_dir: "data/val/masks"
+  # ACDC paths on this Mac. Trainer uses only train/val.
+  train_image_dir: "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+  val_image_dir:   "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+  train_mask_dir:  "/Users/jenilkathrotiya/Downloads/CS 136/TermProject/SafeMask/gt_trainval/gt"
+  val_mask_dir:    "/Users/jenilkathrotiya/Downloads/CS 136/TermProject/SafeMask/gt_trainval/gt"
 
   fog_image_dir: "data/fog/images"
   fog_mask_dir: "data/fog/masks"
@@ -21,15 +21,15 @@ dataset:
   snow_image_dir: "data/snow/images"
   snow_mask_dir: "data/snow/masks"
 
-  image_size: [256, 512]
+  image_size: [128, 256]   # half-res for fast Mac MPS training
   num_classes: 19
 
 training:
-  batch_size: 4
-  epochs: 30
+  batch_size: 8
+  epochs: 5                # 5 epochs is enough for a demo-quality model
   learning_rate: 0.0001
   weight_decay: 0.0001
-  num_workers: 0
+  num_workers: 2
   save_dir: "outputs/checkpoints"
   patience: 5
 

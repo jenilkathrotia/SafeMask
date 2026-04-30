@@ -22,11 +22,17 @@ class SegmentationDataset(Dataset):
     CLAHE on Lab-L for fog/night images, plus Canny edges as a 4th channel
     when ``canny_channel.enabled`` is true.
     """
-    def __init__(self, image_dir, mask_dir=None, transform=None, cs136_config=None):
+    def __init__(self, image_dir, mask_dir=None, transform=None, cs136_config=None,
+                 split=None):
+        """``split`` (one of 'train', 'val', 'test') filters ACDC paths so
+        a single image_dir at the rgb_anon root only returns frames from
+        that split. Reference frames (*_rgb_ref_anon.png) are always skipped.
+        """
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.transform = transform
         self.cs136_config = cs136_config or {}
+        self.split = split
 
         # Glob all images (support nested directories)
         self.images = sorted(glob.glob(os.path.join(image_dir, '**/*.[pj][pn][g]'), recursive=True))
@@ -34,16 +40,28 @@ class SegmentationDataset(Dataset):
             # Fallback for flat dirs
             self.images = sorted(glob.glob(os.path.join(image_dir, '*.[pj][pn][g]')))
 
+        # ACDC: always drop clear-weather reference frames.
+        self.images = [p for p in self.images if not p.endswith('_rgb_ref_anon.png')]
+        # ACDC: optional split filter (path contains /train/ or /val/ or /test/).
+        if self.split is not None:
+            tag = f'/{self.split}/'
+            self.images = [p for p in self.images if tag in p]
+
         self.masks = []
         if self.mask_dir is not None:
-            # specifically search for ACDC/Cityscapes ground truth mask types to avoid colors/instance files
-            self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*labelIds.png'), recursive=True))
+            # ACDC ground-truth: prefer labelTrainIds (already mapped to 0..18),
+            # fall back to labelIds, then anything else.
+            self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*labelTrainIds.png'), recursive=True))
             if not self.masks:
-                self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*labelTrainIds.png'), recursive=True))
+                self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*labelIds.png'), recursive=True))
             if not self.masks:
                 self.masks = sorted(glob.glob(os.path.join(mask_dir, '**/*.[pj][pn][g]'), recursive=True))
             if not self.masks:
                 self.masks = sorted(glob.glob(os.path.join(mask_dir, '*.[pj][pn][g]')))
+            # Match the same split filter as images.
+            if self.split is not None:
+                tag = f'/{self.split}/'
+                self.masks = [p for p in self.masks if tag in p]
 
             # Simple assumption: masks and images are perfectly aligned by sorting
             assert len(self.images) == len(self.masks), f"Found {len(self.images)} images but {len(self.masks)} masks in {image_dir} and {mask_dir}!"
