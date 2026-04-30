@@ -25,7 +25,7 @@ class Trainer:
 
         # ---- LR scheduler: reduce on plateau ----
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode='min', factor=0.5, patience=2, verbose=True
+            self.optimizer, mode='min', factor=0.5, patience=2
         )
 
     # ------------------------------------------------------------------
