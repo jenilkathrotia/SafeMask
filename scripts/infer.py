@@ -10,6 +10,10 @@ import albumentations as A
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.models.segmentation_model import create_model
+from src.preprocessing.cs136_preproc import (
+    apply_cs136_preprocessing,
+    detect_acdc_condition,
+)
 from src.uncertainty.entropy import (
     compute_entropy,
     compute_entropy_mc_dropout,
@@ -66,8 +70,17 @@ def infer():
     img_size  = config['dataset']['image_size']
     transform = A.Compose([A.Resize(height=img_size[0], width=img_size[1])])
     augmented = transform(image=image)
+    proc_image = augmented['image']
+
+    # Apply the same CS 136 preprocessing the model trained with so the input
+    # has the right number of channels (3 or 4).
+    cs136_cfg = config.get('cs136_preprocessing', {})
+    if cs136_cfg.get('enabled', False):
+        condition = detect_acdc_condition(args.image)
+        proc_image = apply_cs136_preprocessing(proc_image, condition, cs136_cfg)
+
     img_tensor = (
-        torch.from_numpy(augmented['image'].transpose(2, 0, 1))
+        torch.from_numpy(proc_image.transpose(2, 0, 1))
         .float() / 255.0
     ).unsqueeze(0).to(device)
 
