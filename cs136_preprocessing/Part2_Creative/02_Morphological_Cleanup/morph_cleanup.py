@@ -1,77 +1,58 @@
-"""Part 2, Creative Idea 2: Morphological cleanup of Canny edges.
+# Part 2 / Creative idea 2 - Morphological cleanup of Canny edges
+#
+# Project 3 covered binary expand/shrink. We extend that:
+#   closing  (dilate then erode) -> fills small gaps in edges
+#   opening  (erode then dilate) -> removes single noisy pixels
+#   skeleton (Zhang-Suen)        -> thins edges to 1 pixel wide
+# Cleaner edges => cleaner Hough voting later.
 
-Project 3 already covered binary expand and shrink. We extend that to
-the standard edge-cleanup steps:
-  * Closing (dilate then erode) fills 1 to 2 pixel gaps in real edges.
-  * Opening (erode then dilate) removes single noisy pixels.
-  * Skeletonize (Zhang-Suen, from scikit-image) thins the result back
-    to 1-pixel-wide lines, which makes Hough voting cleaner.
+import os, glob, cv2, numpy as np
 
-We save the Canny baseline and each stage so the grader can see what
-each step contributes.
-"""
+INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+PER_WEATHER = 5
 
-from __future__ import annotations
+OUT_DIR = os.path.join(os.path.dirname(__file__), "Morph_Cleanup_Images")
+os.makedirs(OUT_DIR, exist_ok=True)
 
-import argparse
-import sys
-from pathlib import Path
-
-import cv2
-import numpy as np
-
-_PKG = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_PKG))
-from utils.io_utils import (  # noqa: E402
-    add_io_args, banner, discover_images, output_stem, read_image, save_image, to_gray,
-)
-from utils.algorithms import canny_project3  # noqa: E402
-
-OUT_DIR = Path(__file__).resolve().parent / "Morph_Cleanup_Images"
+try:
+    from skimage.morphology import skeletonize
+except ImportError:
+    skeletonize = None  # if not installed, just skip the skeleton step
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Morphological cleanup of Canny edges.")
-    add_io_args(parser)
-    parser.add_argument("--close-ksize", type=int, default=3)
-    parser.add_argument("--open-ksize", type=int, default=3)
-    args = parser.parse_args(argv)
-
-    images = discover_images(args.input_dir, args.limit, args.per_condition, args.seed, split=args.split, include_refs=args.include_refs)
-    banner("morph_cleanup", len(images), args.input_dir, OUT_DIR)
-    if not images:
-        print("No images found.")
-        return 1
-
-    try:
-        from skimage.morphology import skeletonize
-    except ImportError:
-        skeletonize = None  # graceful fallback if scikit-image unavailable
-
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    close_k = cv2.getStructuringElement(cv2.MORPH_RECT, (args.close_ksize, args.close_ksize))
-    open_k = cv2.getStructuringElement(cv2.MORPH_RECT, (args.open_ksize, args.open_ksize))
-
-    for path, condition in images:
-        gray = to_gray(read_image(path))
-        edges = canny_project3(gray)
-        closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, close_k)
-        opened = cv2.morphologyEx(closed, cv2.MORPH_OPEN, open_k)
-
-        stem = output_stem(path, condition)
-        save_image(OUT_DIR / f"{stem}__01_canny.png", edges)
-        save_image(OUT_DIR / f"{stem}__02_closed.png", closed)
-        save_image(OUT_DIR / f"{stem}__03_opened.png", opened)
-        if skeletonize is not None:
-            skel = (skeletonize(opened > 0).astype(np.uint8) * 255)
-            save_image(OUT_DIR / f"{stem}__04_skeleton.png", skel)
-
-        print(f"  ✔ {path.name}")
-
-    n_per = 4 if skeletonize is not None else 3
-    print(f"\nWrote {len(images) * n_per} images to {OUT_DIR}")
-    return 0
+def find_images():
+    images = []
+    for cond in ["fog", "night", "rain", "snow"]:
+        files = sorted(glob.glob(f"{INPUT_DIR}/{cond}/train/*/*_rgb_anon.png"))
+        for f in files[:PER_WEATHER]:
+            images.append((f, cond))
+    if images:
+        return images
+    my_test = os.path.join(os.path.dirname(__file__), "..", "..", "..", "My_Test")
+    return [(f, "test") for f in sorted(glob.glob(os.path.join(my_test, "*.png")))]
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+images = find_images()
+print(f"Processing {len(images)} images")
+
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+
+for path, cond in images:
+    name = cond + "__" + os.path.splitext(os.path.basename(path))[0]
+    img = cv2.imread(path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    edges = cv2.Canny(gray, 75, 200, L2gradient=True)
+    closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+    opened = cv2.morphologyEx(closed, cv2.MORPH_OPEN, kernel)
+
+    cv2.imwrite(f"{OUT_DIR}/{name}__01_canny.png", edges)
+    cv2.imwrite(f"{OUT_DIR}/{name}__02_closed.png", closed)
+    cv2.imwrite(f"{OUT_DIR}/{name}__03_opened.png", opened)
+    if skeletonize is not None:
+        skel = (skeletonize(opened > 0).astype(np.uint8) * 255)
+        cv2.imwrite(f"{OUT_DIR}/{name}__04_skeleton.png", skel)
+
+    print(f"  done: {os.path.basename(path)}")
+
+print(f"\nSaved to {OUT_DIR}")

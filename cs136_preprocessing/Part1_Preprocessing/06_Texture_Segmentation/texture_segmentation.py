@@ -1,138 +1,102 @@
-"""Part 1.6: Texture segmentation.
+# Part 1.6 - Texture segmentation with Gabor filters + K-Means
+#
+# Steps:
+#   1. Build a Gabor filter bank (4 orientations x 3 wavelengths = 12 filters)
+#   2. For each pixel, compute |response| of all 12 filters and smooth them
+#   3. (Color version) add Lab a,b channels as extra features
+#   4. K-Means with k=4
+#   5. Color the output by cluster
 
-Steps (texture features, then clustering):
-  1. Build a Gabor filter bank: 4 orientations x 3 scales = 12 filters.
-  2. For each pixel, take the absolute response of all 12 filters, then
-     smooth each response with a small Gaussian. This gives every pixel
-     a stable feature vector that describes the local texture.
-  3. (Color version only) Add the (a, b) channels from CIE Lab as
-     extra color features.
-  4. Z-score the features and run K-Means with k=4 by default.
-  5. Color in the result by which cluster each pixel belongs to.
+import os, glob, cv2, numpy as np
 
-Two outputs per image:
-  * grayscale-only segmentation in ``Grayscale_Texture_Images/``
-  * color-augmented segmentation in ``Color_Texture_Images/``
+INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+PER_WEATHER = 5
+K = 4  # number of clusters
 
-The assignment says to try grayscale first and then add color, so we
-do both.
-"""
+GRAY_OUT = os.path.join(os.path.dirname(__file__), "Grayscale_Texture_Images")
+COLOR_OUT = os.path.join(os.path.dirname(__file__), "Color_Texture_Images")
+os.makedirs(GRAY_OUT, exist_ok=True)
+os.makedirs(COLOR_OUT, exist_ok=True)
 
-from __future__ import annotations
+THETAS = [0.0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
+LAMBDAS = [6.0, 12.0, 24.0]
+KSIZE = 21
 
-import argparse
-import sys
-from pathlib import Path
-
-import cv2
-import numpy as np
-
-_PKG = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_PKG))
-from utils.io_utils import (  # noqa: E402
-    add_io_args, banner, discover_images, output_stem, read_image, save_image, to_gray,
-)
-
-OUT_DIR = Path(__file__).resolve().parent
-GRAY_OUT = OUT_DIR / "Grayscale_Texture_Images"
-COLOR_OUT = OUT_DIR / "Color_Texture_Images"
-
-GABOR_THETAS = (0.0, np.pi / 4, np.pi / 2, 3 * np.pi / 4)
-GABOR_LAMBDAS = (6.0, 12.0, 24.0)
-GABOR_KSIZE = 21
-GABOR_SIGMA = 4.0
-GABOR_GAMMA = 0.5
-
-# 8-class colormap so cluster IDs stay legible.
+# 8-color palette so cluster colors are easy to tell apart
 PALETTE = np.array([
-    [220,  20,  60],
-    [ 30, 144, 255],
-    [ 50, 205,  50],
-    [255, 165,   0],
-    [148,   0, 211],
-    [  0, 206, 209],
-    [255, 215,   0],
-    [105, 105, 105],
+    [220,  20,  60], [ 30, 144, 255], [ 50, 205,  50], [255, 165,   0],
+    [148,   0, 211], [  0, 206, 209], [255, 215,   0], [105, 105, 105],
 ], dtype=np.uint8)
 
 
-def gabor_features(gray: np.ndarray) -> np.ndarray:
-    feats: list[np.ndarray] = []
-    g = gray.astype(np.float32) / 255.0
-    for theta in GABOR_THETAS:
-        for lam in GABOR_LAMBDAS:
-            kern = cv2.getGaborKernel(
-                (GABOR_KSIZE, GABOR_KSIZE), GABOR_SIGMA, theta, lam, GABOR_GAMMA, 0,
-                ktype=cv2.CV_32F,
-            )
-            resp = np.abs(cv2.filter2D(g, cv2.CV_32F, kern))
-            resp = cv2.GaussianBlur(resp, (0, 0), sigmaX=lam / 2.0)
-            feats.append(resp)
+def gabor_features(gray):
+    feats = []
+    g = gray.astype(np.float32) / 255
+    for theta in THETAS:
+        for lam in LAMBDAS:
+            kern = cv2.getGaborKernel((KSIZE, KSIZE), 4.0, theta, lam, 0.5, 0,
+                                      ktype=cv2.CV_32F)
+            r = np.abs(cv2.filter2D(g, cv2.CV_32F, kern))
+            r = cv2.GaussianBlur(r, (0, 0), sigmaX=lam / 2)
+            feats.append(r)
     return np.stack(feats, axis=-1)  # H x W x 12
 
 
-def kmeans_segment(feats_hwc: np.ndarray, k: int, max_iter: int = 30) -> np.ndarray:
-    """Simple K-Means via cv2.kmeans on standardized features."""
-    h, w, c = feats_hwc.shape
-    flat = feats_hwc.reshape(-1, c).astype(np.float32)
-    mean = flat.mean(axis=0, keepdims=True)
-    std = flat.std(axis=0, keepdims=True)
-    std[std < 1e-6] = 1.0
-    flat = (flat - mean) / std
-
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, max_iter, 0.5)
-    _, labels, _ = cv2.kmeans(flat, k, None, criteria, attempts=3,
+def kmeans_segment(feats):
+    h, w, c = feats.shape
+    flat = feats.reshape(-1, c).astype(np.float32)
+    # z-score
+    flat = (flat - flat.mean(0, keepdims=True)) / (flat.std(0, keepdims=True) + 1e-6)
+    crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.5)
+    _, labels, _ = cv2.kmeans(flat, K, None, crit, attempts=3,
                               flags=cv2.KMEANS_PP_CENTERS)
     return labels.reshape(h, w)
 
 
-def colorize(labels: np.ndarray) -> np.ndarray:
+def colorize(labels):
     return PALETTE[labels % len(PALETTE)]
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Texture-based segmentation (Gabor + KMeans).")
-    add_io_args(parser)
-    parser.add_argument("--k", type=int, default=4, help="Number of clusters.")
-    args = parser.parse_args(argv)
-
-    images = discover_images(args.input_dir, args.limit, args.per_condition, args.seed, split=args.split, include_refs=args.include_refs)
-    banner("texture_segmentation", len(images), args.input_dir, OUT_DIR)
-    if not images:
-        print("No images found.")
-        return 1
-
-    GRAY_OUT.mkdir(parents=True, exist_ok=True)
-    COLOR_OUT.mkdir(parents=True, exist_ok=True)
-
-    for path, condition in images:
-        bgr = read_image(path)
-        gray = to_gray(bgr)
-        stem = output_stem(path, condition)
-        gabor = gabor_features(gray)
-
-        # Grayscale-only run
-        labels_g = kmeans_segment(gabor, args.k)
-        seg_g = colorize(labels_g)
-        side_g = np.hstack([cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR), cv2.cvtColor(seg_g, cv2.COLOR_RGB2BGR)])
-        save_image(GRAY_OUT / f"{stem}__seg_k{args.k}.png", side_g)
-
-        # Color run: append Lab a,b channels alongside Gabor energy
-        lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
-        ab = lab[..., 1:] / 255.0  # H x W x 2 in [0,1]
-        # Match Gabor's smoothing scale to keep features comparable.
-        ab = np.stack([cv2.GaussianBlur(ab[..., i], (0, 0), sigmaX=4.0) for i in range(2)], axis=-1)
-        feats_color = np.concatenate([gabor, ab], axis=-1)
-        labels_c = kmeans_segment(feats_color, args.k)
-        seg_c = colorize(labels_c)
-        side_c = np.hstack([bgr, cv2.cvtColor(seg_c, cv2.COLOR_RGB2BGR)])
-        save_image(COLOR_OUT / f"{stem}__seg_k{args.k}.png", side_c)
-
-        print(f"  ✔ {path.name}")
-
-    print(f"\nWrote {len(images)} grayscale + {len(images)} color segmentations.")
-    return 0
+def find_images():
+    images = []
+    for cond in ["fog", "night", "rain", "snow"]:
+        files = sorted(glob.glob(f"{INPUT_DIR}/{cond}/train/*/*_rgb_anon.png"))
+        for f in files[:PER_WEATHER]:
+            images.append((f, cond))
+    if images:
+        return images
+    my_test = os.path.join(os.path.dirname(__file__), "..", "..", "..", "My_Test")
+    return [(f, "test") for f in sorted(glob.glob(os.path.join(my_test, "*.png")))]
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+images = find_images()
+print(f"Processing {len(images)} images")
+
+for path, cond in images:
+    name = cond + "__" + os.path.splitext(os.path.basename(path))[0]
+    bgr = cv2.imread(path)
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+
+    # grayscale-only segmentation
+    gab = gabor_features(gray)
+    labels_g = kmeans_segment(gab)
+    seg_g = colorize(labels_g)
+    side_g = np.hstack([cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR),
+                        cv2.cvtColor(seg_g, cv2.COLOR_RGB2BGR)])
+    cv2.imwrite(f"{GRAY_OUT}/{name}__seg_k{K}.png", side_g)
+
+    # color version: add Lab a,b channels
+    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
+    ab = lab[..., 1:] / 255  # H x W x 2
+    ab = np.stack([cv2.GaussianBlur(ab[..., i], (0, 0), sigmaX=4) for i in range(2)],
+                  axis=-1)
+    feats_color = np.concatenate([gab, ab], axis=-1)
+    labels_c = kmeans_segment(feats_color)
+    seg_c = colorize(labels_c)
+    side_c = np.hstack([bgr, cv2.cvtColor(seg_c, cv2.COLOR_RGB2BGR)])
+    cv2.imwrite(f"{COLOR_OUT}/{name}__seg_k{K}.png", side_c)
+
+    print(f"  done: {os.path.basename(path)}")
+
+print(f"\nSaved grayscale to {GRAY_OUT}")
+print(f"Saved color to {COLOR_OUT}")

@@ -1,78 +1,73 @@
-"""Part 1.2: Sobel edge detector (Project 3 port).
+# Part 1.2 - Sobel edge detector
+# Same 3x3 kernels as our Project 3 sobel().
+# Pre-blur with sigma=1 first, then compute Sx, Sy, magnitude, and binary edges.
 
-Uses the same 3x3 Sx / Sy kernels as Project 3's ``sobel()`` and saves:
-  * |gx|, |gy| (sizes of the horizontal and vertical gradients),
-  * gradient magnitude (rescaled to 0..255),
-  * a binary edge map at the top 25% of the magnitude (this is a
-    threshold that adapts to each image, so it works on dark and
-    bright images alike).
+import os, glob, cv2, numpy as np
 
-A sigma=1 Gaussian pre-blur is on by default (``--pre-blur``). Lecture
-cv07 says you should always blur before a first-derivative operator.
-"""
+INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+PER_WEATHER = 5
 
-from __future__ import annotations
+OUT_DIR = os.path.join(os.path.dirname(__file__), "Sobel_Edge_Images")
+os.makedirs(OUT_DIR, exist_ok=True)
 
-import argparse
-import sys
-from pathlib import Path
-
-import cv2
-import numpy as np
-
-_PKG = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_PKG))
-from utils.io_utils import (  # noqa: E402
-    add_io_args, banner, discover_images, output_stem, read_image, save_image, to_gray,
-)
-from utils.algorithms import normalize_to_uint8, sobel_components  # noqa: E402
-
-OUT_DIR = Path(__file__).resolve().parent / "Sobel_Edge_Images"
+# Sobel kernels
+SOBEL_X = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]], dtype=np.float64)
+SOBEL_Y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float64)
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Sobel edge detection (Project 3 kernels).")
-    add_io_args(parser)
-    parser.add_argument("--pre-blur", type=float, default=1.0,
-                        help="sigma for Gaussian pre-blur (0 disables).")
-    parser.add_argument("--threshold-percentile", type=float, default=75.0,
-                        help="Percentile of |grad| used as the binary threshold.")
-    args = parser.parse_args(argv)
-
-    images = discover_images(args.input_dir, args.limit, args.per_condition, args.seed, split=args.split, include_refs=args.include_refs)
-    banner("sobel_edge", len(images), args.input_dir, OUT_DIR)
-    if not images:
-        print("No images found.")
-        return 1
-
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    for path, condition in images:
-        img = read_image(path)
-        gray = to_gray(img)
-        if args.pre_blur > 0:
-            k = max(3, int(round(args.pre_blur * 6)) | 1)
-            gray = cv2.GaussianBlur(gray, (k, k), args.pre_blur,
-                                    borderType=cv2.BORDER_REPLICATE)
-
-        gx, gy, mag = sobel_components(gray)
-        gx_u8 = normalize_to_uint8(np.abs(gx))
-        gy_u8 = normalize_to_uint8(np.abs(gy))
-        mag_u8 = normalize_to_uint8(mag)
-        thresh = np.percentile(mag_u8, args.threshold_percentile)
-        binary = ((mag_u8 >= thresh).astype(np.uint8) * 255)
-
-        stem = output_stem(path, condition)
-        save_image(OUT_DIR / f"{stem}__00_source.png", gray)
-        save_image(OUT_DIR / f"{stem}__01_gx_abs.png", gx_u8)
-        save_image(OUT_DIR / f"{stem}__02_gy_abs.png", gy_u8)
-        save_image(OUT_DIR / f"{stem}__03_magnitude.png", mag_u8)
-        save_image(OUT_DIR / f"{stem}__04_binary_p{int(args.threshold_percentile)}.png", binary)
-        print(f"  ✔ {path.name}")
-
-    print(f"\nWrote {len(images) * 5} images to {OUT_DIR}")
-    return 0
+def find_images():
+    images = []
+    for cond in ["fog", "night", "rain", "snow"]:
+        files = sorted(glob.glob(f"{INPUT_DIR}/{cond}/train/*/*_rgb_anon.png"))
+        for f in files[:PER_WEATHER]:
+            images.append((f, cond))
+    if images:
+        return images
+    my_test = os.path.join(os.path.dirname(__file__), "..", "..", "..", "My_Test")
+    return [(f, "test") for f in sorted(glob.glob(os.path.join(my_test, "*.png")))]
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+def stretch(arr):
+    # rescale to 0..255
+    arr = arr.astype(np.float64)
+    lo, hi = arr.min(), arr.max()
+    if hi - lo < 1e-9:
+        return np.zeros_like(arr, dtype=np.uint8)
+    return ((arr - lo) / (hi - lo) * 255).astype(np.uint8)
+
+
+images = find_images()
+print(f"Processing {len(images)} images")
+
+for path, cond in images:
+    name = cond + "__" + os.path.splitext(os.path.basename(path))[0]
+    img = cv2.imread(path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Pre-blur (sigma 1, 7x7 kernel) - reduces noise before edge detection
+    gray = cv2.GaussianBlur(gray, (7, 7), 1)
+
+    # Compute gradients
+    gx = cv2.filter2D(gray.astype(np.float64), cv2.CV_64F, SOBEL_X,
+                      borderType=cv2.BORDER_REPLICATE)
+    gy = cv2.filter2D(gray.astype(np.float64), cv2.CV_64F, SOBEL_Y,
+                      borderType=cv2.BORDER_REPLICATE)
+    mag = np.sqrt(gx * gx + gy * gy)
+
+    gx_u8 = stretch(np.abs(gx))
+    gy_u8 = stretch(np.abs(gy))
+    mag_u8 = stretch(mag)
+
+    # Binary edges = pixels in the top 25% of magnitude
+    thresh = np.percentile(mag_u8, 75)
+    binary = ((mag_u8 >= thresh).astype(np.uint8) * 255)
+
+    cv2.imwrite(f"{OUT_DIR}/{name}__00_source.png", gray)
+    cv2.imwrite(f"{OUT_DIR}/{name}__01_gx_abs.png", gx_u8)
+    cv2.imwrite(f"{OUT_DIR}/{name}__02_gy_abs.png", gy_u8)
+    cv2.imwrite(f"{OUT_DIR}/{name}__03_magnitude.png", mag_u8)
+    cv2.imwrite(f"{OUT_DIR}/{name}__04_binary_p75.png", binary)
+
+    print(f"  done: {os.path.basename(path)}")
+
+print(f"\nSaved to {OUT_DIR}")

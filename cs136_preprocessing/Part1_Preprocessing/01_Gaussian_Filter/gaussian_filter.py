@@ -1,77 +1,65 @@
-"""Part 1.1: Gaussian filter.
+# Part 1.1 - Gaussian filter
+# Smooth each image with Gaussian at sigma 1, 2, and 4.
+# Also save the 5x5 kernel from Project 3 (for comparison).
 
-For every input image we save:
-  * the grayscale source,
-  * Gaussian-smoothed outputs at sigma = 1, 2, 4 (kernel size = 6*sigma+1),
-  * the Project 3 fixed 5x5/273 kernel, so we can compare the two side by side.
+import os, glob, cv2, numpy as np
 
-Run from the repo root:
-    python cs136_preprocessing/Part1_Preprocessing/01_Gaussian_Filter/gaussian_filter.py
-"""
+# CHANGE THIS to where you put the ACDC training images
+INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
+PER_WEATHER = 5  # how many random images to pick from each weather
 
-from __future__ import annotations
+# folder where outputs go
+OUT_DIR = os.path.join(os.path.dirname(__file__), "Gaussian_Filter_Images")
+os.makedirs(OUT_DIR, exist_ok=True)
 
-import argparse
-import sys
-from pathlib import Path
-
-import cv2
-import numpy as np
-
-# Make ``utils`` importable regardless of CWD.
-_PKG = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_PKG))
-from utils.io_utils import (  # noqa: E402
-    add_io_args, banner, discover_images, output_stem, read_image, save_image, to_gray,
-)
-from utils.algorithms import GAUSS_5_273  # noqa: E402
-
-SIGMAS = (1.0, 2.0, 4.0)
-OUT_DIR = Path(__file__).resolve().parent / "Gaussian_Filter_Images"
+# Project 3 fixed 5x5 Gaussian (divided by 273)
+GAUSS_5 = np.array([
+    [1,  4,  7,  4, 1],
+    [4, 16, 26, 16, 4],
+    [7, 26, 41, 26, 7],
+    [4, 16, 26, 16, 4],
+    [1,  4,  7,  4, 1]
+], dtype=np.float64) / 273.0
 
 
-def gaussian_with_sigma(gray: np.ndarray, sigma: float) -> np.ndarray:
-    k = max(3, int(round(sigma * 6)) | 1)  # ksize must be odd
-    return cv2.GaussianBlur(gray, (k, k), sigmaX=sigma, sigmaY=sigma,
-                            borderType=cv2.BORDER_REPLICATE)
+def find_images():
+    # try ACDC first (5 images per weather)
+    images = []
+    for cond in ["fog", "night", "rain", "snow"]:
+        files = sorted(glob.glob(f"{INPUT_DIR}/{cond}/train/*/*_rgb_anon.png"))
+        for f in files[:PER_WEATHER]:
+            images.append((f, cond))
+    if images:
+        return images
+    # fallback: My_Test images
+    my_test = os.path.join(os.path.dirname(__file__), "..", "..", "..", "My_Test")
+    return [(f, "test") for f in sorted(glob.glob(os.path.join(my_test, "*.png")))]
 
 
-def project3_5x5(gray: np.ndarray) -> np.ndarray:
-    out = cv2.filter2D(gray.astype(np.float64), cv2.CV_64F, GAUSS_5_273,
-                       borderType=cv2.BORDER_REPLICATE)
-    return np.clip(out, 0, 255).astype(np.uint8)
+images = find_images()
+print(f"Processing {len(images)} images")
 
+for path, cond in images:
+    name = cond + "__" + os.path.splitext(os.path.basename(path))[0]
+    img = cv2.imread(path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Apply Gaussian smoothing to driving scenes.")
-    add_io_args(parser)
-    args = parser.parse_args(argv)
+    # save the source
+    cv2.imwrite(f"{OUT_DIR}/{name}__00_source.png", gray)
 
-    images = discover_images(args.input_dir, args.limit, args.per_condition, args.seed, split=args.split, include_refs=args.include_refs)
-    banner("gaussian_filter", len(images), args.input_dir, OUT_DIR)
-    if not images:
-        print("No images found.")
-        return 1
+    # Project 3 5x5/273 kernel
+    proj3 = cv2.filter2D(gray.astype(np.float64), cv2.CV_64F, GAUSS_5,
+                         borderType=cv2.BORDER_REPLICATE)
+    cv2.imwrite(f"{OUT_DIR}/{name}__01_proj3_5x5_273.png",
+                np.clip(proj3, 0, 255).astype(np.uint8))
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    # OpenCV Gaussian at sigma 1, 2, 4
+    for sigma in [1, 2, 4]:
+        ksize = max(3, int(round(sigma * 6)) | 1)  # odd kernel size
+        blurred = cv2.GaussianBlur(gray, (ksize, ksize), sigma,
+                                   borderType=cv2.BORDER_REPLICATE)
+        cv2.imwrite(f"{OUT_DIR}/{name}__sigma{sigma}.png", blurred)
 
-    for path, condition in images:
-        img = read_image(path)
-        gray = to_gray(img)
-        stem = output_stem(path, condition)
+    print(f"  done: {os.path.basename(path)}")
 
-        save_image(OUT_DIR / f"{stem}__00_source.png", gray)
-        save_image(OUT_DIR / f"{stem}__01_proj3_5x5_273.png", project3_5x5(gray))
-        for sigma in SIGMAS:
-            save_image(
-                OUT_DIR / f"{stem}__sigma{sigma:0.1f}.png",
-                gaussian_with_sigma(gray, sigma),
-            )
-        print(f"  ✔ {path.name}")
-
-    print(f"\nWrote {len(images) * (2 + len(SIGMAS))} images to {OUT_DIR}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+print(f"\nSaved to {OUT_DIR}")
