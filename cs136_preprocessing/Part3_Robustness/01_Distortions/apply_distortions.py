@@ -8,7 +8,7 @@
 import os, glob, cv2, numpy as np
 
 INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
-PER_WEATHER = 5
+PER_WEATHER = 1
 
 NOISY_DIR = os.path.join(os.path.dirname(__file__), "Noisy")
 BLUR_DIR = os.path.join(os.path.dirname(__file__), "Blurred")

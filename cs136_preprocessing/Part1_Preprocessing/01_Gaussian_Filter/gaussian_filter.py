@@ -6,7 +6,7 @@ import os, glob, cv2, numpy as np
 
 # CHANGE THIS to where you put the ACDC training images
 INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
-PER_WEATHER = 5  # how many random images to pick from each weather
+PER_WEATHER = 1  # how many random images to pick from each weather
 
 # folder where outputs go
 OUT_DIR = os.path.join(os.path.dirname(__file__), "Gaussian_Filter_Images")

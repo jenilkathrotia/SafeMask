@@ -10,7 +10,7 @@
 import os, glob, cv2, numpy as np
 
 INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
-PER_WEATHER = 5
+PER_WEATHER = 1
 K = 4  # number of clusters
 
 GRAY_OUT = os.path.join(os.path.dirname(__file__), "Grayscale_Texture_Images")

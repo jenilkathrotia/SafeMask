@@ -6,7 +6,7 @@ import os, glob, cv2, numpy as np
 from scipy.ndimage import maximum_filter
 
 INPUT_DIR = "/Users/jenilkathrotiya/Downloads/rgb_anon_trainvaltest/rgb_anon"
-PER_WEATHER = 5
+PER_WEATHER = 1
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "Hough_Images")
 os.makedirs(OUT_DIR, exist_ok=True)
