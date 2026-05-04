@@ -1,12 +1,11 @@
 # Part 3 / Step 2 - Compare clean vs distorted outputs
 #
-# We run four methods on the clean image and on each distorted version,
-# then measure how much the output changed:
+# We run three edge detectors on the clean image and on each distorted
+# version, then measure how much the output changed:
 #   - Sobel at P75
 #   - Project 3 Canny (no pre-blur)
 #   - Project 3 Canny WITH a sigma=1 pre-blur (the cv08 recommendation)
-#   - Texture segmentation (Gabor + K-Means)
-# Score: IoU for edge detectors, ARI for the segmentation (label-permutation invariant).
+# Score: IoU between clean and distorted edge maps.
 
 import os, sys, glob, csv
 import cv2, numpy as np
@@ -94,26 +93,6 @@ def canny_with_preblur(gray):
     return canny_proj3(sm)
 
 
-def texture_seg(gray, k=4):
-    feats = []
-    g = gray.astype(np.float32) / 255
-    for theta in [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]:
-        for lam in [6, 12, 24]:
-            kern = cv2.getGaborKernel((21, 21), 4, theta, lam, 0.5, 0,
-                                      ktype=cv2.CV_32F)
-            r = np.abs(cv2.filter2D(g, cv2.CV_32F, kern))
-            r = cv2.GaussianBlur(r, (0, 0), sigmaX=lam / 2)
-            feats.append(r)
-    feats = np.stack(feats, axis=-1)
-    h, w, c = feats.shape
-    flat = feats.reshape(-1, c)
-    flat = (flat - flat.mean(0, keepdims=True)) / (flat.std(0, keepdims=True) + 1e-6)
-    crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.5)
-    _, labels, _ = cv2.kmeans(flat.astype(np.float32), k, None, crit,
-                              attempts=3, flags=cv2.KMEANS_PP_CENTERS)
-    return labels.reshape(h, w)
-
-
 def add_noise(bgr, sigma, rng):
     return np.clip(bgr.astype(np.float32) + rng.normal(0, sigma, bgr.shape),
                    0, 255).astype(np.uint8)
@@ -134,20 +113,11 @@ def iou(a, b):
     return inter / union if union > 0 else 1.0
 
 
-def ari(a, b):
-    try:
-        from sklearn.metrics import adjusted_rand_score
-        return float(adjusted_rand_score(a.flatten(), b.flatten()))
-    except ImportError:
-        return float((a.flatten() == b.flatten()).mean())
-
-
 def run_all(gray):
     return {
         "sobel_p75": sobel_p75(gray),
         "canny_proj3": canny_proj3(gray),
         "canny_proj3_preblur": canny_with_preblur(gray),
-        "texture_seg": texture_seg(gray),
     }
 
 
@@ -166,7 +136,7 @@ def find_images():
 images = find_images()
 print(f"Comparing on {len(images)} images")
 
-DETECTORS = ["sobel_p75", "canny_proj3", "canny_proj3_preblur", "texture_seg"]
+DETECTORS = ["sobel_p75", "canny_proj3", "canny_proj3_preblur"]
 DISTORTIONS = ["noisy", "blurred", "lowcontrast"]
 rng = np.random.default_rng(42)
 
@@ -188,8 +158,7 @@ for path, cond in images:
         d_gray = cv2.cvtColor(d_bgr, cv2.COLOR_BGR2GRAY)
         distorted = run_all(d_gray)
         for det in DETECTORS:
-            score = ari(clean[det], distorted[det]) if det == "texture_seg" \
-                    else iou(clean[det], distorted[det])
+            score = iou(clean[det], distorted[det])
             rows.append([name, cond, dname, det, f"{score:.4f}"])
             agg[det][dname].append(score)
     print(f"  done: {name}")
@@ -218,7 +187,7 @@ if images:
 # write CSVs
 with open(os.path.join(OUT_DIR, "per_image_metrics.csv"), "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["image", "condition", "distortion", "detector", "score_iou_or_ari"])
+    w.writerow(["image", "condition", "distortion", "detector", "iou"])
     w.writerows(rows)
 
 with open(os.path.join(OUT_DIR, "aggregate_metrics.csv"), "w", newline="") as f:
@@ -244,7 +213,7 @@ for i in range(len(DETECTORS)):
     for j in range(len(DISTORTIONS)):
         ax.text(j, i, f"{grid[i, j]:.2f}", ha="center", va="center",
                 color="white" if grid[i, j] < 0.5 else "black")
-fig.colorbar(im, ax=ax, label="Mean IoU (edges) / ARI (segmentation)")
+fig.colorbar(im, ax=ax, label="Mean IoU")
 ax.set_title(f"Distortion robustness (n={len(images)})")
 plt.tight_layout()
 fig.savefig(os.path.join(OUT_DIR, "iou_heatmap.png"), dpi=120)
