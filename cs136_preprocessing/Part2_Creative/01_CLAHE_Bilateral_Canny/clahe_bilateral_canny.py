@@ -1,4 +1,4 @@
-# Part 2 / Creative idea 1 - CLAHE + bilateral filter + Canny
+# Part 2 / Creative idea 1 - CLAHE with bilateral filter and Canny
 #
 # Why: in fog and night images, edges get washed out. So we boost the contrast
 # first with CLAHE, denoise without blurring edges with a bilateral filter,
