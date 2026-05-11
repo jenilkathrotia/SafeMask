@@ -11,23 +11,13 @@ from src.preprocessing.cs136_preproc import (
 
 
 class SegmentationDataset(Dataset):
-    """
-    Generic segmentation dataset loader suitable for ACDC, Cityscapes, or dummy data.
-    Assumes standard directory structure where images and masks can be matched
-    by sorting or by replacing a substring in the filename.
-
-    If ``cs136_config`` is provided (a dict from configs/config.yaml under
-    ``cs136_preprocessing``), each image gets the CS 136 preprocessing
-    applied right after loading and before albumentations: sigma=1 Gaussian,
-    CLAHE on Lab-L for fog/night images, plus Canny edges as a 4th channel
-    when ``canny_channel.enabled`` is true.
-    """
+    # Loads ACDC/Cityscapes images and matching masks. If cs136_config is set,
+    # applies CS 136 preprocessing (Gaussian + CLAHE + Canny as 4th channel)
+    # after albumentations so the model gets a 4-channel input.
     def __init__(self, image_dir, mask_dir=None, transform=None, cs136_config=None,
                  split=None):
-        """``split`` (one of 'train', 'val', 'test') filters ACDC paths so
-        a single image_dir at the rgb_anon root only returns frames from
-        that split. Reference frames (*_rgb_ref_anon.png) are always skipped.
-        """
+        # split = 'train' / 'val' / 'test' filters ACDC paths.
+        # Reference frames (*_rgb_ref_anon.png) are always skipped.
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.transform = transform

@@ -12,6 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.models.segmentation_model import create_model
 from src.uncertainty.entropy import compute_entropy, get_warning_regions
+from src.preprocessing.cs136_preproc import apply_cs136_preprocessing
 
 # --- Styling & Setup ---
 st.set_page_config(page_title="SafeMask Demo", layout="wide", page_icon="🚗")
@@ -68,8 +69,15 @@ if uploaded_file is not None:
     transform = A.Compose([A.Resize(height=img_size[0], width=img_size[1])])
     
     augmented = transform(image=image)
-    img_tensor = augmented['image']
-    img_tensor = torch.from_numpy(img_tensor.transpose(2, 0, 1)).float() / 255.0
+    img_resized = augmented['image']
+
+    # Apply CS 136 preprocessing (Gaussian + CLAHE + Canny as 4th channel)
+    # so the input matches what the model was trained on.
+    cs136_cfg = config.get('cs136_preprocessing', {})
+    if cs136_cfg.get('enabled', False):
+        img_resized = apply_cs136_preprocessing(img_resized, condition=None, config=cs136_cfg)
+
+    img_tensor = torch.from_numpy(img_resized.transpose(2, 0, 1)).float() / 255.0
     img_tensor = img_tensor.unsqueeze(0).to(device)
     
     # Inference
