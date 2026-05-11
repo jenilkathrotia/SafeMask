@@ -126,10 +126,10 @@ class Trainer:
                 self.epochs_no_improve = 0
                 save_path = os.path.join(self.save_dir, 'best_model.pth')
                 torch.save(self.model.state_dict(), save_path)
-                print(f"  ✅ Saved best model  (val_loss={val_loss:.4f})")
+                print(f" Saved best model  (val_loss={val_loss:.4f})")
             else:
                 self.epochs_no_improve += 1
-                print(f"  ⚠️  No improvement for {self.epochs_no_improve}/{self.patience} epochs")
+                print(f" No improvement for {self.epochs_no_improve}/{self.patience} epochs")
 
             # Always save latest
             torch.save(self.model.state_dict(),
@@ -137,7 +137,7 @@ class Trainer:
 
             # Early stopping
             if self.epochs_no_improve >= self.patience:
-                print(f"\n⛔ Early stopping triggered after {epoch} epochs.")
+                print(f"\n Early stopping triggered after {epoch} epochs.")
                 break
 
         print(f"\nTraining complete. Best val loss: {best_val_loss:.4f}")
