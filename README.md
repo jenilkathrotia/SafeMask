@@ -10,43 +10,74 @@ confidently wrong.
 
 ## Results
 
-For each weather, the four panels are: original image, predicted
-segmentation, normalized uncertainty heatmap, and the red warning
-overlay (pixels with uncertainty above 0.5).
+All result images are in the [`results/`](results/) folder.
+
+### 1. SafeMask demos — segmentation + uncertainty on adverse weather
+
+Four panels per image: original, predicted segmentation, normalized
+uncertainty heatmap, and the red warning overlay (pixels with
+uncertainty above 0.5).
 
 **Fog** — 23.5 % of pixels flagged as uncertain
-![Fog demo](results/01_fog_demo.png)
+![Fog demo](results/01_safemask_demo_fog.png)
 
 **Night** — 16.9 % uncertain
-![Night demo](results/02_night_demo.png)
+![Night demo](results/02_safemask_demo_night.png)
 
 **Rain** — 19.3 % uncertain
-![Rain demo](results/03_rain_demo.png)
+![Rain demo](results/03_safemask_demo_rain.png)
 
 **Snow** — 17.5 % uncertain
-![Snow demo](results/04_snow_demo.png)
+![Snow demo](results/04_safemask_demo_snow.png)
 
-### Robustness study (CS 136 preprocessing)
+### 2. CS 136 preprocessing techniques
+
+Each technique applied to the same fog frame from ACDC.
+
+| Step | Output |
+|---|---|
+| Gaussian blur (sigma = 2) | ![Gaussian](results/05_gaussian_filter_sigma2_fog.png) |
+| Sobel edges (P75 threshold) | ![Sobel](results/06_sobel_edge_p75_fog.png) |
+| Canny edges (Project 3 port) | ![Canny](results/07_canny_project3_fog.png) |
+| Hough Transform (lane lines) | ![Hough](results/08_hough_lines_fog.png) |
+
+### 3. Creative idea — CLAHE + Bilateral + Canny
+
+Plain Canny misses most edges in fog and night because the contrast is
+too low. Our 3-step pipeline boosts local contrast with CLAHE on the L
+channel, denoises with a bilateral filter (edge-preserving), then runs
+Canny on the cleaned-up image.
+
+**Fog**
+
+| Plain Canny | CLAHE + Bilateral + Canny |
+|---|---|
+| ![baseline fog](results/09_creative_baseline_canny_fog.png) | ![creative fog](results/10_creative_pipeline_canny_fog.png) |
+
+**Night**
+
+| Plain Canny | CLAHE + Bilateral + Canny |
+|---|---|
+| ![baseline night](results/11_creative_baseline_canny_night.png) | ![creative night](results/12_creative_pipeline_canny_night.png) |
+
+### 4. Robustness study
 
 We compared three edge detectors on 80 ACDC images, with each image
 distorted three ways (Gaussian noise σ=25, motion blur 15 px, low
 contrast). IoU is between the clean edge map and the distorted edge
 map — higher = more robust.
 
-![IoU heatmap](results/05_robustness_heatmap.png)
+![IoU heatmap](results/13_robustness_iou_heatmap.png)
 
 **Key finding:** adding a sigma=1 Gaussian pre-blur before Canny
 almost doubles its noise robustness (IoU 0.18 → 0.34).
 
-### Creative idea: CLAHE + Bilateral + Canny
+Diagnostic strip below shows the visual proof on a noisy fog frame —
+**left:** clean Canny, **middle:** Canny on the noisy image (broken
+edges), **right:** Canny with the sigma=1 pre-blur (most clean edges
+recovered).
 
-Plain Canny misses most edges in fog. Our pipeline boosts contrast
-with CLAHE, denoises without softening edges using a bilateral filter,
-then runs Canny on the cleaned-up image. Same fog frame:
-
-| Plain Canny | CLAHE + Bilateral + Canny |
-|---|---|
-| ![baseline](results/06_canny_baseline_fog.png) | ![creative](results/07_canny_creative_fog.png) |
+![Diagnostic strip](results/14_robustness_diagnostic_strip_fog_noisy.png)
 
 ## What it does
 
