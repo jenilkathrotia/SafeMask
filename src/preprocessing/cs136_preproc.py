@@ -1,4 +1,4 @@
-# CS 136 preprocessing for the SafeMask data loader.
+# preprocessing for the SafeMask data loader.
 # Applies the four findings from the term-project robustness study to every
 # training image: sigma=1 Gaussian, CLAHE on Lab L (fog/night only), Canny
 # edges as a 4th channel, and morphological cleanup on those edges.
