@@ -32,17 +32,17 @@ confidently wrong.
 SafeMask/
 ├── app/                  # Streamlit demo app
 ├── configs/              # YAML config files
-├── cs136_preprocessing/  # CS 136 term project (see its own README)
+├── preprocessing/        # CS 136 preprocessing scripts (Part 1, 2, 3)
 ├── outputs/              # Trained weights and saved visualizations
 ├── scripts/              # CLI scripts: train, evaluate, infer
 ├── src/                  # Main code
 │   ├── datasets/         # PyTorch data loaders
 │   ├── models/           # Model definitions
+│   ├── preprocessing/    # CS 136 preprocessing wired into training
 │   ├── training/         # Training loop
 │   ├── uncertainty/      # Entropy and warning regions
 │   ├── evaluation/       # Validation metrics
 │   └── visualization/    # Plotting helpers
-├── tests/                # Tests
 └── README.md
 ```
 
@@ -106,12 +106,12 @@ streamlit run app/app.py
 
 ## CS 136 term project
 
-The folder `cs136_preprocessing/` is our CS 136 term project. It is a
-separate Python pipeline that runs classic image-processing methods
-(Gaussian, Sobel, Canny, Hough, texture segmentation, etc.) on the
-SafeMask training images and writes a report on which methods help
-under noise, blur, and low contrast. It does not change anything about
-the SafeMask model. See `cs136_preprocessing/README.md` for details.
+The folder `preprocessing/` holds our CS 136 term project. It runs the
+four classical techniques (Gaussian, Sobel, Canny, Hough) on the ACDC
+training images, plus a creative idea (CLAHE + Bilateral + Canny) and
+a robustness study that measures how each method holds up under noise,
+motion blur, and low contrast. The robustness writeup lives in
+`preprocessing/Part3_Robustness/REPORT.md`.
 
 ## What does not work yet, and what is next
 
