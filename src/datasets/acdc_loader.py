@@ -75,7 +75,7 @@ class SegmentationDataset(Dataset):
                 raise ValueError(f"Could not read mask: {mask_path}")
 
         # Run albumentations FIRST (it expects 3-channel RGB; runs RandomFog,
-        # MotionBlur, etc.). Then apply CS 136 preprocessing on the augmented
+        # MotionBlur, etc.). Then apply preprocessing on the augmented
         # image so the Canny edge channel reflects what the model will see.
         if self.transform is not None:
             if mask is not None:
@@ -94,7 +94,7 @@ class SegmentationDataset(Dataset):
                 image = (image.numpy().transpose(1, 2, 0) * 255.0).astype('uint8')
             image = apply_cs136_preprocessing(image, condition, self.cs136_config)
 
-        # Convert to CHW tensor (handles 3 or 4 channels).
+        # Convert to CHW tensor (handles 3/4 channels).
         if not torch.is_tensor(image):
             image = torch.from_numpy(image.transpose(2, 0, 1)).float() / 255.0
         if mask is not None and not torch.is_tensor(mask):
