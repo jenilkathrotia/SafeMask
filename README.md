@@ -8,6 +8,46 @@ self-driving system can be careful around them. This is mostly useful
 in fog, rain, snow, and night, where regular models tend to be
 confidently wrong.
 
+## Results
+
+For each weather, the four panels are: original image, predicted
+segmentation, normalized uncertainty heatmap, and the red warning
+overlay (pixels with uncertainty above 0.5).
+
+**Fog** — 23.5 % of pixels flagged as uncertain
+![Fog demo](results/01_fog_demo.png)
+
+**Night** — 16.9 % uncertain
+![Night demo](results/02_night_demo.png)
+
+**Rain** — 19.3 % uncertain
+![Rain demo](results/03_rain_demo.png)
+
+**Snow** — 17.5 % uncertain
+![Snow demo](results/04_snow_demo.png)
+
+### Robustness study (CS 136 preprocessing)
+
+We compared three edge detectors on 80 ACDC images, with each image
+distorted three ways (Gaussian noise σ=25, motion blur 15 px, low
+contrast). IoU is between the clean edge map and the distorted edge
+map — higher = more robust.
+
+![IoU heatmap](results/05_robustness_heatmap.png)
+
+**Key finding:** adding a sigma=1 Gaussian pre-blur before Canny
+almost doubles its noise robustness (IoU 0.18 → 0.34).
+
+### Creative idea: CLAHE + Bilateral + Canny
+
+Plain Canny misses most edges in fog. Our pipeline boosts contrast
+with CLAHE, denoises without softening edges using a bilateral filter,
+then runs Canny on the cleaned-up image. Same fog frame:
+
+| Plain Canny | CLAHE + Bilateral + Canny |
+|---|---|
+| ![baseline](results/06_canny_baseline_fog.png) | ![creative](results/07_canny_creative_fog.png) |
+
 ## What it does
 
 - **Segmentation**: We use DeepLabV3+ from `segmentation_models_pytorch`
